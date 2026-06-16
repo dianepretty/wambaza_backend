@@ -44,6 +44,16 @@ class ChangePasswordIn(BaseModel):
     new_password: str
 
 
+class ForgotPasswordIn(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordIn(BaseModel):
+    email: EmailStr
+    otp: str
+    new_password: str
+
+
 class ArticleBase(BaseModel):
     title_en: str
     title_kin: Optional[str]

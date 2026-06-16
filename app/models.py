@@ -15,6 +15,8 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     hashed_password = Column(String, nullable=False)
     must_change_password = Column(Boolean, default=True)
+    reset_otp_hash = Column(String, nullable=True)
+    reset_otp_expires_at = Column(DateTime, nullable=True)
 
     articles = relationship("Article", back_populates="publisher")
 
