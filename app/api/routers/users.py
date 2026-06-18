@@ -12,11 +12,8 @@ import secrets
 router = APIRouter(prefix="/users", tags=["users"])
 logger = logging.getLogger(__name__)
 
-# TEMPORARY: require_admin removed from all routes below while OTP login is broken.
-# Restore `dependencies=[Depends(require_admin)]` on each route once OTP flow is fixed.
 
-
-@router.post("", response_model=UserOut)
+@router.post("", response_model=UserOut, dependencies=[Depends(require_admin)])
 def create_publisher(payload: UserCreate, db: Session = Depends(get_db)):
     existing = db.query(models.User).filter(models.User.email == payload.email).first()
     if existing:
@@ -40,13 +37,13 @@ def create_publisher(payload: UserCreate, db: Session = Depends(get_db)):
     return user
 
 
-@router.get("", response_model=list[UserOut])
+@router.get("", response_model=list[UserOut], dependencies=[Depends(require_admin)])
 def list_users(db: Session = Depends(get_db)):
     users = db.query(models.User).all()
     return users
 
 
-@router.patch("/{id}", response_model=UserOut)
+@router.patch("/{id}", response_model=UserOut, dependencies=[Depends(require_admin)])
 def update_user(id: int, payload: UserUpdate, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.id == id).first()
     if not user:
@@ -60,7 +57,7 @@ def update_user(id: int, payload: UserUpdate, db: Session = Depends(get_db)):
     return user
 
 
-@router.patch("/{id}/deactivate")
+@router.patch("/{id}/deactivate", dependencies=[Depends(require_admin)])
 def deactivate_user(id: int, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.id == id).first()
     if not user:
@@ -70,7 +67,7 @@ def deactivate_user(id: int, db: Session = Depends(get_db)):
     return {"detail": "deactivated"}
 
 
-@router.patch("/{id}/activate")
+@router.patch("/{id}/activate", dependencies=[Depends(require_admin)])
 def activate_user(id: int, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.id == id).first()
     if not user:

@@ -3,7 +3,7 @@ import uuid
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, File, status
 from sqlalchemy.orm import Session
-from app.schemas import ArticleBase, ArticleOut
+from app.schemas import ArticleBase, ArticleOut, ArticleAdminOut
 from app.db.session import get_db
 from app import models
 from app.api.deps import require_publisher, require_admin, get_current_user
@@ -53,6 +53,39 @@ def list_my_articles(
     if status_filter:
         query = query.filter(models.Article.status == status_filter)
     return query.order_by(models.Article.updated_at.desc()).all()
+
+
+@router.get("/all", response_model=list[ArticleAdminOut], dependencies=[Depends(require_admin)])
+def list_all_articles(
+    status_filter: Optional[str] = None,
+    publisher_id: Optional[int] = None,
+    db: Session = Depends(get_db),
+):
+    query = db.query(models.Article, models.User).join(models.User, models.Article.publisher_id == models.User.id)
+    if status_filter:
+        query = query.filter(models.Article.status == status_filter)
+    if publisher_id:
+        query = query.filter(models.Article.publisher_id == publisher_id)
+    rows = query.order_by(models.Article.updated_at.desc()).all()
+    return [
+        {
+            "id": article.id,
+            "title_en": article.title_en,
+            "title_kin": article.title_kin,
+            "title_lug": article.title_lug,
+            "content_en": article.content_en,
+            "content_kin": article.content_kin,
+            "content_lug": article.content_lug,
+            "cover_image_url": article.cover_image_url,
+            "status": article.status,
+            "publisher_id": article.publisher_id,
+            "created_at": article.created_at,
+            "updated_at": article.updated_at,
+            "publisher_name": publisher.name,
+            "publisher_email": publisher.email,
+        }
+        for article, publisher in rows
+    ]
 
 
 @router.get("/{id}", response_model=ArticleOut)

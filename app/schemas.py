@@ -75,6 +75,11 @@ class ArticleOut(ArticleBase):
         orm_mode = True
 
 
+class ArticleAdminOut(ArticleOut):
+    publisher_name: str
+    publisher_email: str
+
+
 class AskIn(BaseModel):
     question: str
     language: str

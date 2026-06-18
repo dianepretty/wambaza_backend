@@ -3,7 +3,7 @@ import secrets
 from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status, Response
 from sqlalchemy.orm import Session
-from app.schemas import LoginIn, Token, ChangePasswordIn, ForgotPasswordIn, ResetPasswordIn, UserInDB
+from app.schemas import LoginIn, Token, ChangePasswordIn, ForgotPasswordIn, ResetPasswordIn, UserInDB, UserUpdate
 from app.db.session import get_db
 from app import models
 from app.utils.security import verify_password, create_access_token, get_password_hash
@@ -53,6 +53,17 @@ def change_password(payload: ChangePasswordIn, current_user: models.User = Depen
 
 @router.get("/me", response_model=UserInDB)
 def me(current_user: models.User = Depends(get_current_user)):
+    return current_user
+
+
+@router.patch("/me", response_model=UserInDB)
+def update_me(payload: UserUpdate, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if payload.name is not None:
+        current_user.name = payload.name
+    if payload.email is not None:
+        current_user.email = payload.email
+    db.commit()
+    db.refresh(current_user)
     return current_user
 
 
