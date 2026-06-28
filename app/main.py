@@ -11,7 +11,7 @@ app = FastAPI(title="Wambaza Backend")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[config.settings.FRONTEND_URL],
+    allow_origins=[o.strip() for o in config.settings.FRONTEND_URL.split(",")],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
