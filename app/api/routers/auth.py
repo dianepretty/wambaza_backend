@@ -25,13 +25,19 @@ def login(data: LoginIn, response: Response, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 
     token = create_access_token({"sub": str(user.id)})
-    response.set_cookie(key="access_token", value=token, httponly=True)
+    response.set_cookie(
+        key="access_token",
+        value=token,
+        httponly=True,
+        secure=True,
+        samesite="none",
+    )
     return {"access_token": token}
 
 
 @router.post("/logout", response_model=dict)
 def logout(response: Response):
-    response.delete_cookie(key="access_token")
+    response.delete_cookie(key="access_token", secure=True, samesite="none")
     return {"detail": "logged_out"}
 
 
