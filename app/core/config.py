@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import BaseSettings
 
 
@@ -11,6 +12,7 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: str
     FRONTEND_URL: str
     ALGORITHM: str = "HS256"
+    HF_TOKEN: str=""
 
     class Config:
         env_file = ".env"
