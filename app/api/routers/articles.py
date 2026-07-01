@@ -1,31 +1,32 @@
-import os
-import uuid
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, File, status
+import cloudinary
+import cloudinary.uploader
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 from app.schemas import ArticleBase, ArticleOut, ArticleAdminOut
 from app.db.session import get_db
 from app import models
 from app.api.deps import require_publisher, require_admin, get_current_user
+from app.core.config import settings
 
 router = APIRouter(prefix="/articles", tags=["articles"])
 
-UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), "static", "uploads")
 ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+
+cloudinary.config(
+    cloud_name=settings.CLOUDINARY_CLOUD_NAME,
+    api_key=settings.CLOUDINARY_API_KEY,
+    api_secret=settings.CLOUDINARY_API_SECRET,
+)
 
 
 @router.post("/upload-image", dependencies=[Depends(require_publisher)])
-async def upload_image(request: Request, file: UploadFile = File(...)):
+async def upload_image(file: UploadFile = File(...)):
     if file.content_type not in ALLOWED_IMAGE_TYPES:
         raise HTTPException(status_code=400, detail="Only JPEG, PNG, WEBP, or GIF images are allowed")
-    os.makedirs(UPLOAD_DIR, exist_ok=True)
-    ext = os.path.splitext(file.filename or "")[1] or ".jpg"
-    filename = f"{uuid.uuid4().hex}{ext}"
-    path = os.path.join(UPLOAD_DIR, filename)
-    with open(path, "wb") as f:
-        f.write(await file.read())
-    url = f"{str(request.base_url).rstrip('/')}/static/uploads/{filename}"
-    return {"url": url}
+    data = await file.read()
+    result = cloudinary.uploader.upload(data, folder="wambaza/articles", resource_type="image")
+    return {"url": result["secure_url"]}
 
 
 @router.post("", response_model=ArticleOut, dependencies=[Depends(require_publisher)])
@@ -73,9 +74,11 @@ def list_all_articles(
             "title_en": article.title_en,
             "title_kin": article.title_kin,
             "title_lug": article.title_lug,
+            "title_sw": article.title_sw,
             "content_en": article.content_en,
             "content_kin": article.content_kin,
             "content_lug": article.content_lug,
+            "content_sw": article.content_sw,
             "cover_image_url": article.cover_image_url,
             "status": article.status,
             "publisher_id": article.publisher_id,

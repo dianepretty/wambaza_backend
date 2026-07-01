@@ -58,9 +58,11 @@ class ArticleBase(BaseModel):
     title_en: str
     title_kin: Optional[str]
     title_lug: Optional[str]
+    title_sw: Optional[str]
     content_en: str
     content_kin: Optional[str]
     content_lug: Optional[str]
+    content_sw: Optional[str]
     cover_image_url: Optional[str]
 
 
